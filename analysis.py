@@ -4,7 +4,12 @@ import matplotlib.pyplot as plt
 df = pd.read_csv("network_traffic.csv")    # It reads CSV file and loads it into a table structure called a DataFrame.
 df["timestamp"] = pd.to_datetime(df["timestamp"])    # Converts the text into actual Time Objects.
 
+df["moving_avg"] = df["value"].rolling(window=50).mean()    # Calculate and store 50-point moving average.
+
 plt.figure(figsize=(12, 6))    # Sets up the empty space where the graph will be drawn.
 plt.plot(df["timestamp"], df["value"])    # This actually draws the data.
+plt.plot(df["timestamp"], df["moving_avg"])    # Draws the moving average.
 plt.title("Raw Network Traffic")    # Adds a title to the plot.
 plt.show()    # Renders the final image on your screen.
+
+data_for_model = df["value"]
