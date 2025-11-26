@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
 
-df = pd.read_csv("network_traffic.csv")    # It reads CSV file and loads it into a table structure called a DataFrame.
+df = pd.read_csv("data/network_traffic.csv")    # It reads CSV file and loads it into a table structure called a DataFrame.
 df["timestamp"] = pd.to_datetime(df["timestamp"])    # Converts the text into actual Time Objects.
 
 
