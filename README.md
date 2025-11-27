@@ -4,7 +4,7 @@ A robust command-line interface (CLI) tool designed to detect cybersecurity thre
 
 **Link to project:** [https://github.com/leoccom/Network-Traffic-Anomaly-Detection](https://github.com/leoccom/Network-Traffic-Anomaly-Detection)
 
-![Network Anomaly Detection Result](output/network_traffic_graph.png_0.001.png)
+![Network Anomaly Detection Result](output/network_traffic_graph_0.001.png)
 
 ## How It's Made:
 
