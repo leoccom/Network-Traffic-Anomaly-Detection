@@ -1,48 +1,21 @@
 import argparse
 import os
-from posixpath import basename
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.ensemble import IsolationForest
 
 
-# df = pd.read_csv("data/network_traffic.csv")    # It reads CSV file and loads it into a table structure called a DataFrame.
-# df["timestamp"] = pd.to_datetime(df["timestamp"])    # Converts the text into actual Time Objects.
+# High "value" (network traffic) may indicate potential DDoS attack or network congestion.
 
 
-# df["moving_avg"] = df["value"].rolling(window=50).mean()    # Calculate and store 50-point moving average.
+def analyze_traffic(file_path, output_name, contamination=0.01):
+    # Check if the output directory exists.
+    os.makedirs("output", exist_ok=True)
 
-
-# plt.figure(figsize=(12, 6))    # Sets up the empty space where the graph will be drawn.
-# plt.plot(df["timestamp"], df["value"])    # This actually draws the data.
-# plt.plot(df["timestamp"], df["moving_avg"])    # Draws the moving average.
-# plt.title("Raw Network Traffic")    # Adds a title to the plot.
-# # plt.show()    # Renders the final image on your screen.
-
-
-# data_for_model = df["value"]
-
-
-# # contamination of 0.01 = 1% of the traffic is anomalous
-# model = IsolationForest(contamination=0.01, random_state=42)
-# model.fit(df[["value"]])
-
-# df["anomaly"] = model.predict(df[["value"]])    # -1: Anomaly, 1: Normal
-
-# anomalies = df[df["anomaly"] == -1]
-
-# plt.scatter(anomalies["timestamp"], anomalies["value"], color="red")
-# plt.show()
-
-
-# High value (network traffic) may indicate potential DDoS attack or network congestion.
-
-
-def analyze_traffic(file_name, output_image, contamination=0.01):
     # 1. Load the data using the argument passed by the user.
     try:
-        print(f"Loading data from data/{file_name}.csv...")
-        df = pd.read_csv(f"data/{file_name}.csv")    # It reads CSV file and loads it into a table structure called a DataFrame.
+        print(f"Loading data from {file_path}...")
+        df = pd.read_csv(f"{file_path}")    # It reads CSV file and loads it into a table structure called a DataFrame.
 
         df["timestamp"] = pd.to_datetime(df["timestamp"])    ## Converts the text into actual Time Objects.
 
@@ -50,9 +23,14 @@ def analyze_traffic(file_name, output_image, contamination=0.01):
         print("Error: File not found. Please check the path.")
         return
     
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return
+    
 
     # 2. Train model
     ## contamination of 0.01 = 1% of the traffic is anomalous
+    print(f"Training Isolation Forest (Contamination: {contamination})...")
     model = IsolationForest(contamination=contamination, random_state=42)
     model.fit(df[["value"]])
     
@@ -68,18 +46,21 @@ def analyze_traffic(file_name, output_image, contamination=0.01):
     plt.plot(df["timestamp"], df["value"], color="blue", label="Normal Traffic", alpha=0.6)
     plt.scatter(anomalies["timestamp"], anomalies["value"], color="red", label="Anomaly")
     plt.plot([], [], ' ', label=f'Contamination: {contamination}')
-    plt.title(f"Anomaly Detection Result - {file_name}.csv")
+    plt.title(f"Anomaly Detection Result - {file_path}")
     plt.legend()
+    plt.grid(True, alpha=0.3) # Added grid for readability
 
 
     # 5. Save to the output path
-    plt.savefig(f"output/{output_image}_{contamination}.png")
-    print(f"Graph saved to output/{output_image}_{contamination}.png.")
+    output_png_path = os.path.join("output", f"{output_name}_{contamination}.png")
+    plt.savefig(output_png_path)
+    print(f"Graph saved to {output_png_path}.")
 
 
     # 6. Save the anomaly list into a CSV format.
-    anomalies.to_csv(f"output/{file_name}_anomaly_{contamination}", index=False)
-    print(f"Anomaly list saved to output/{file_name}_anomaly_{contamination}.")
+    output_csv_path = os.path.join("output", f"{output_name}_anomalies_{contamination}.csv")
+    anomalies.to_csv(output_csv_path, index=False)
+    print(f"Anomaly list saved to {output_csv_path}.")
 
 
 if __name__ == "__main__":
@@ -92,12 +73,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    base_name = os.path.basename(args.input)    # "traffic.csv" from "data/traffic.csv"
-    filename, extension = os.path.splitext(base_name)
-
     final_output_name = args.output
     if final_output_name is None:
-        final_output_name = f"{filename}_graph.png"
+        base_name = os.path.basename(args.input)    # "traffic.csv" from "data/traffic.csv"
+        filename, extension = os.path.splitext(base_name)
+        final_output_name = f"{filename}_graph"
 
     # Run the function
-    analyze_traffic(filename, final_output_name, args.c)
+    analyze_traffic(args.input, final_output_name, args.c)
